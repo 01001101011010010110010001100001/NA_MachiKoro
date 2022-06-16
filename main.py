@@ -524,6 +524,7 @@ def normal_main(list_player,times,print_mode,file_temp):
     count = [0,0,0,0]
     for van in range(times):
         state = reset()
+        file_temp = [[],[],[],[]]
         win,file_temp = normal_environment(state,list_player,print_mode,file_temp)
         count[win] += 1
     return count
