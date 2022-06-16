@@ -3,6 +3,7 @@ import random as rd
 from numba import vectorize, jit, cuda, float64
 from itertools import permutations
 import cupy as cp
+
 def reset():
     # 4 thẻ đầu là 4 thẻ win game, 15 thẻ sau là các thẻ bth, cuối cùng là tiền
     player_1 = [0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0]
@@ -252,7 +253,7 @@ def normal_environment(state,list_player,print_mode,file_temp):
                     if print_mode == 1:
                         print(current_player,"cướp",real,"từ người chơi",oppo)
             if state[32 + current_player*20] == 1:
-                choice = action_player(state,list_player)
+                choice = action_player(state,list_player,file_temp)
                 oppo = (current_player + 3 - choice)%4
                 real = min(5,state[34 + oppo*20])
                 state[34 + current_player*20] += real
