@@ -1,8 +1,8 @@
 import numpy as np
 import random as rd
-from numba import vectorize, jit, cuda, float64
-from itertools import permutations
-import cupy as cp
+# from numba import vectorize, jit, cuda, float64
+# from itertools import permutations
+# import cupy as cp
 
 def reset():
     # 4 thẻ đầu là 4 thẻ win game, 15 thẻ sau là các thẻ bth, cuối cùng là tiền
