@@ -4,6 +4,7 @@ from numba import vectorize, jit, cuda, float64
 from itertools import permutations
 import cupy as cp
 
+
 def reset():
     # 4 thẻ đầu là 4 thẻ win game, 15 thẻ sau là các thẻ bth, cuối cùng là tiền
     player_1 = [0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0]
@@ -510,13 +511,13 @@ def normal_environment(state,list_player,print_mode,file_temp):
         state[99] += 1
         choice = action_player(state,list_player,file_temp)
     win = system_check_end(state)
-    return win
+    return win,file_temp
 
 def normal_main(list_player,times,print_mode,file_temp):
     count = [0,0,0,0]
     for van in range(times):
         state = reset()
-        win = normal_environment(state,list_player,print_mode,file_temp)
+        win,file_temp = normal_environment(state,list_player,print_mode,file_temp)
         count[win] += 1
-    return count
+    return count,file_temp
 
