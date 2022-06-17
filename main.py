@@ -111,25 +111,21 @@ def state_to_player(state):
 
 def random_player0(play_state,file_temp,file_per):
     a = get_list_action(play_state)
-    print(play_state[99])
     b = rd.randrange(len(a))
     return a[b],file_temp,file_per
 
 def random_player1(play_state,file_temp,file_per):
     a = get_list_action(play_state)
-    print(play_state[99])
     b = rd.randrange(len(a))
     return a[b],file_temp,file_per
 
 def random_player2(play_state,file_temp,file_per):
     a = get_list_action(play_state)
-    print(play_state[99])
     b = rd.randrange(len(a))
     return a[b],file_temp,file_per
 
 def random_player3(play_state,file_temp,file_per):
     a = get_list_action(play_state)
-    print(play_state[99])
     b = rd.randrange(len(a))
     return a[b],file_temp,file_per
 
@@ -156,6 +152,7 @@ def check_victory(state):
 
 def normal_environment(state,list_player,print_mode,file_temp,file_per):
     state[95] = 0
+    
     while system_check_end(state) == -1:
         current_player = state[99]%4
         state[95] = 1
@@ -445,7 +442,7 @@ def normal_environment(state,list_player,print_mode,file_temp,file_per):
         if choice == 23:
             state[31 + current_player*20] = 1
             state[12] -= 1
-            state[23 + current_player*20] -= 6
+            state[34 + current_player*20] -= 6
             if print_mode == 1:
                 print(current_player,"bỏ 6 xu mua thẻ _6_1")
                 print("số thẻ _6_1 còn lại là",state[12])    
