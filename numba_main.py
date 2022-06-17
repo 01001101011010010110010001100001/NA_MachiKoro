@@ -1,6 +1,7 @@
 import numpy as np
 import random as rd
 from numba import vectorize, jit, cuda, float64
+np.seterr(all='ignore')
 
 @jit(nopython=True)
 def reset():
@@ -176,7 +177,7 @@ def action_player(state,player0,player1,player2,player3,file_temp,file_per):
 @jit(nopython=True)
 def normal_environment(state,player0,player1,player2,player3,file_temp,file_per):
     state[95] = 0
-    while system_check_end(state) == -1:
+    while system_check_end(state) == -1 or state[99] > 200:
         current_player = state[99]%4
         state[95] = 1
         # check xem chọn 1 hay 2 dice
@@ -232,6 +233,7 @@ def normal_environment(state,player0,player1,player2,player3,file_temp,file_per)
                 if state[24 + nguoichoi*20] >0:
                     state[34 + nguoichoi*20] += state[24 + nguoichoi*20]
         if sum_dice == 6:
+            oppo = (current_player-next)%4
             if state[31 + current_player*20] == 1:
                 for next in range(1,4):
                     oppo = (current_player-next)%4
@@ -371,7 +373,7 @@ def normal_environment(state,player0,player1,player2,player3,file_temp,file_per)
         if choice == 23:
             state[31 + current_player*20] = 1
             state[12] -= 1
-            state[23 + current_player*20] -= 6
+            state[34 + current_player*20] -= 6
         # mua thẻ 6_2
         if choice == 24:
             state[32 + current_player*20] = 1
@@ -412,12 +414,12 @@ def normal_environment(state,player0,player1,player2,player3,file_temp,file_per)
     win = system_check_end(state)
     return win,file_temp,file_per
 
-def numba_main(player0,player1,player2,player3,times):
+@jit(nopython=True)
+def numba_main(player0,player1,player2,player3,times,temp,file_per):
     count = [0,0,0,0]
-    file_per = np.zeros(1)
     for van in range(times):
         state = reset()
-        file_temp = np.array([np.zeros(1),np.zeros(1),np.zeros(1),np.zeros(1)])
+        file_temp = temp.copy()
         win,file_temp,file_per = normal_environment(state,player0,player1,player2,player3,file_temp,file_per)
         count[win] += 1
     return count,file_per
