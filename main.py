@@ -1,29 +1,8 @@
 import numpy as np
 import random as rd
-# from numba import vectorize, jit, cuda, float64
-# from itertools import permutations
-# import cupy as cp
 
 def reset():
-    # 4 thẻ đầu là 4 thẻ win game, 15 thẻ sau là các thẻ bth, cuối cùng là tiền
-    player_1 = [0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0]
-    player_2 = [0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0]
-    player_3 = [0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0]
-    player_4 = [0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0]
-    # các thẻ trong bàn chơi
-    board = [6,6,6,6,6,6,6,6,6,6,6,6,4,4,4]
-    # phase đang thực hiện
-    phase = [0]
-    # kết quả xúc sắc gần nhất
-    rolled = [0,0]
-    # số reroll đã dùng
-    reroll = [0]
-    # lượt của người chơi nào
-    p_turn = [0]
-    bought = [1,1,1,1,1,1,1,1,1,1,1,1]
-    state = board + player_1 + player_2 + player_3 + player_4 + phase + rolled + reroll + p_turn + bought
-    state = np.array(state)
-    return state
+    return np.array([6,6,6,6,6,6,6,6,6,6,6,6,4,4,4,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1])
 
 def get_list_action(play_state):
     if play_state[95] == 7:
@@ -130,31 +109,35 @@ def state_to_player(state):
     # print(player_state)
     return player_state
 
-def random_player0(play_state,file_temp):
+def random_player0(play_state,file_temp,file_per):
     a = get_list_action(play_state)
+    print(play_state[99])
     b = rd.randrange(len(a))
-    return a[b],file_temp
+    return a[b],file_temp,file_per
 
-def random_player1(play_state,file_temp):
+def random_player1(play_state,file_temp,file_per):
     a = get_list_action(play_state)
+    print(play_state[99])
     b = rd.randrange(len(a))
-    return a[b],file_temp
+    return a[b],file_temp,file_per
 
-def random_player2(play_state,file_temp):
+def random_player2(play_state,file_temp,file_per):
     a = get_list_action(play_state)
+    print(play_state[99])
     b = rd.randrange(len(a))
-    return a[b],file_temp
+    return a[b],file_temp,file_per
 
-def random_player3(play_state,file_temp):
+def random_player3(play_state,file_temp,file_per):
     a = get_list_action(play_state)
+    print(play_state[99])
     b = rd.randrange(len(a))
-    return a[b],file_temp
+    return a[b],file_temp,file_per
 
-def action_player(state,list_player,file_temp):
+def action_player(state,list_player,file_temp,file_per):
     current_player = state[99]%4
     play_state = state_to_player(state)
-    played_move,file_temp[current_player] = list_player[current_player](play_state,file_temp[current_player])
-    return played_move
+    played_move,file_temp[current_player],file_per = list_player[current_player](play_state,file_temp[current_player],file_per)
+    return played_move,file_temp,file_per
 
 def system_check_end(state):
     for nguoichoi in range(4):
@@ -170,14 +153,15 @@ def check_victory(state):
             else: 
                 return 1
     return -1 
-def normal_environment(state,list_player,print_mode,file_temp):
+
+def normal_environment(state,list_player,print_mode,file_temp,file_per):
     state[95] = 0
     while system_check_end(state) == -1:
         current_player = state[99]%4
         state[95] = 1
         # check xem chọn 1 hay 2 dice
         if state[15 + current_player*20] == 1:
-            choice = action_player(state,list_player,file_temp)
+            choice,file_temp,file_per = action_player(state,list_player,file_temp,file_per)
             if choice == 1:
                 state[96] = rd.randrange(1,7)
                 state[97] = 0
@@ -192,7 +176,7 @@ def normal_environment(state,list_player,print_mode,file_temp):
         state[95] = 2
         # check xem có reroll không
         if state[18 + current_player*20] == 1:
-            choice = action_player(state,list_player,file_temp)
+            choice,file_temp,file_per = action_player(state,list_player,file_temp,file_per)
             if choice == 1:
                 state[96] = rd.randrange(1,7)
                 state[97] = 0
@@ -261,7 +245,7 @@ def normal_environment(state,list_player,print_mode,file_temp):
                     if print_mode == 1:
                         print(current_player,"cướp",real,"từ người chơi",oppo)
             if state[32 + current_player*20] == 1:
-                choice = action_player(state,list_player,file_temp)
+                choice,file_temp,file_per = action_player(state,list_player,file_temp,file_per)
                 oppo = (current_player + 3 - choice)%4
                 real = min(5,state[34 + oppo*20])
                 state[34 + current_player*20] += real
@@ -270,7 +254,8 @@ def normal_environment(state,list_player,print_mode,file_temp):
                     print(current_player,"cướp",real,"xu từ người chơi",oppo)
             if state[33 + current_player*20] == 1:
                 state[95] = 4
-                choice = action_player(state,list_player,file_temp) - 28
+                choice,file_temp,file_per = action_player(state,list_player,file_temp,file_per)
+                choice -= 28
                 if choice > 0:
                     target = choice//144 +1
                     oppo = (current_player + target)%4
@@ -342,7 +327,7 @@ def normal_environment(state,list_player,print_mode,file_temp):
         new_xu = state_to_player(state)[34]
         if print_mode == 1:
             print(current_player,"nghĩ là có",new_xu,"xu")
-        choice = action_player(state,list_player,file_temp)
+        choice,file_temp,file_per = action_player(state,list_player,file_temp,file_per)
         # mua thẻ 1
         if choice == 11:
             state[choice + 8 + current_player*20] += 1
@@ -516,16 +501,17 @@ def normal_environment(state,list_player,print_mode,file_temp):
     state[95] = 7
     for nguoichoi in range(4):
         state[99] += 1
-        choice = action_player(state,list_player,file_temp)
+        choice,file_temp,file_per = action_player(state,list_player,file_temp,file_per)
     win = system_check_end(state)
-    return win,file_temp
+    return win,file_temp,file_per
 
-def normal_main(list_player,times,print_mode,file_temp):
+def normal_main(list_player,times,print_mode):
     count = [0,0,0,0]
+    file_per = []
     for van in range(times):
         state = reset()
         file_temp = [[],[],[],[]]
-        win,file_temp = normal_environment(state,list_player,print_mode,file_temp)
+        win,file_temp,file_per = normal_environment(state,list_player,print_mode,file_temp,file_per)
         count[win] += 1
-    return count
+    return count,file_per
 
