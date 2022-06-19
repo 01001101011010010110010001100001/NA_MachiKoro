@@ -50,7 +50,7 @@ def get_list_action(play_state):
                     list_return.append(card)
         # nếu có từ 4 xu trở lên
         if play_state[34] > 3:
-            if play_state[15] != -1:
+            if play_state[15] != 1:
                 list_return.append(7)
         # nếu có từ 5 xu trở lên
         if play_state[34] > 4:
@@ -153,7 +153,7 @@ def check_victory(state):
 def normal_environment(state,list_player,print_mode,file_temp,file_per):
     state[95] = 0
     
-    while system_check_end(state) == -1:
+    while system_check_end(state) == -1 or state[99] < 100:
         current_player = state[99]%4
         state[95] = 1
         # check xem chọn 1 hay 2 dice
