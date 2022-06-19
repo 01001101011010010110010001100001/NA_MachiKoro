@@ -176,121 +176,121 @@ def action_player(state,player0,player1,player2,player3,file_temp,file_per):
 
 @jit(nopython=True)
 def normal_environment(state,player0,player1,player2,player3,file_temp,file_per):
-    state[95] = 0
-    while system_check_end(state) == -1 or state[99] > 200:
+    while system_check_end(state) == -1:
         current_player = state[99]%4
-        state[95] = 1
-        # check xem chọn 1 hay 2 dice
-        if state[15 + current_player*20] == 1:
-            choice,file_temp,file_per = action_player(state,player0,player1,player2,player3,file_temp,file_per)
-            if choice == 1:
+        if state[95] == 0:
+            state[95] = 1
+            # check xem chọn 1 hay 2 dice
+            if state[15 + current_player*20] == 1:
+                choice,file_temp,file_per = action_player(state,player0,player1,player2,player3,file_temp,file_per)
+                if choice == 1:
+                    state[96] = rd.randrange(1,7)
+                    state[97] = 0
+                if choice == 2:
+                    state[96] = rd.randrange(1,7)
+                    state[97] = rd.randrange(1,7)
+            else:
                 state[96] = rd.randrange(1,7)
                 state[97] = 0
-            if choice == 2:
-                state[96] = rd.randrange(1,7)
-                state[97] = rd.randrange(1,7)
-        else:
-            state[96] = rd.randrange(1,7)
-            state[97] = 0
-        state[95] = 2
-        # check xem có reroll không
-        if state[18 + current_player*20] == 1:
-            choice,file_temp,file_per = action_player(state,player0,player1,player2,player3,file_temp,file_per)
-            if choice == 1:
-                state[96] = rd.randrange(1,7)
-                state[97] = 0
-            if choice == 2:
-                state[96] = rd.randrange(1,7)
-                state[97] = rd.randrange(1,7)
-        state[95] = 3
-        # giải quyết kết quả xúc xắc
-        sum_dice = state[96] + state[97]
-        if sum_dice == 1:
-            for nguoichoi in range(4):
-                if state[19 + nguoichoi*20] >0:
-                    state[34 + nguoichoi*20] += state[19 + nguoichoi*20]
-        if sum_dice == 2:
-            for nguoichoi in range(4):
-                if state[20 + nguoichoi*20] >0:
-                    state[34 + nguoichoi*20] += state[20 + nguoichoi*20]
-            if state[21 + current_player*20] > 0:
-                state[34 + current_player*20] += state[21 + current_player*20] * (1 + state[16 + current_player*20])
-        if sum_dice == 3:
-            for next in range(1,4):
-                oppo = (current_player - next)%4
-                if state[22 + oppo*20] > 0:
-                    cost = (1 + state[36 + oppo*20]) * state[22 + oppo*20]
-                    real = min(cost, state[34 + current_player*20])
-                    state[34 + current_player*20] -= real
-                    state[34 + oppo*20] += real
-            if state[21 + current_player*20] > 0:
-                state[34 + current_player*20] += state[21 + current_player*20] * (1 + state[16 + current_player*20])
-        if sum_dice == 4:
-            if state[23 + current_player*20] > 0:
-                state[34 + current_player*20] += state[23 + current_player*20] * (3 + state[16 + current_player*20])
-        if sum_dice == 5:
-            for nguoichoi in range(4):
-                if state[24 + nguoichoi*20] >0:
-                    state[34 + nguoichoi*20] += state[24 + nguoichoi*20]
-        if sum_dice == 6:
-            oppo = (current_player-next)%4
-            if state[31 + current_player*20] == 1:
+            state[95] = 2
+            # check xem có reroll không
+            if state[18 + current_player*20] == 1:
+                choice,file_temp,file_per = action_player(state,player0,player1,player2,player3,file_temp,file_per)
+                if choice == 1:
+                    state[96] = rd.randrange(1,7)
+                    state[97] = 0
+                if choice == 2:
+                    state[96] = rd.randrange(1,7)
+                    state[97] = rd.randrange(1,7)
+            state[95] = 3
+            # giải quyết kết quả xúc xắc
+            sum_dice = state[96] + state[97]
+            if sum_dice == 1:
+                for nguoichoi in range(4):
+                    if state[19 + nguoichoi*20] >0:
+                        state[34 + nguoichoi*20] += state[19 + nguoichoi*20]
+            if sum_dice == 2:
+                for nguoichoi in range(4):
+                    if state[20 + nguoichoi*20] >0:
+                        state[34 + nguoichoi*20] += state[20 + nguoichoi*20]
+                if state[21 + current_player*20] > 0:
+                    state[34 + current_player*20] += state[21 + current_player*20] * (1 + state[16 + current_player*20])
+            if sum_dice == 3:
                 for next in range(1,4):
-                    oppo = (current_player-next)%4
-                    real = min(2,state[34 + oppo*20])
+                    oppo = (current_player - next)%4
+                    if state[22 + oppo*20] > 0:
+                        cost = (1 + state[36 + oppo*20]) * state[22 + oppo*20]
+                        real = min(cost, state[34 + current_player*20])
+                        state[34 + current_player*20] -= real
+                        state[34 + oppo*20] += real
+                if state[21 + current_player*20] > 0:
+                    state[34 + current_player*20] += state[21 + current_player*20] * (1 + state[16 + current_player*20])
+            if sum_dice == 4:
+                if state[23 + current_player*20] > 0:
+                    state[34 + current_player*20] += state[23 + current_player*20] * (3 + state[16 + current_player*20])
+            if sum_dice == 5:
+                for nguoichoi in range(4):
+                    if state[24 + nguoichoi*20] >0:
+                        state[34 + nguoichoi*20] += state[24 + nguoichoi*20]
+            if sum_dice == 6:
+                oppo = (current_player-next)%4
+                if state[31 + current_player*20] == 1:
+                    for next in range(1,4):
+                        oppo = (current_player-next)%4
+                        real = min(2,state[34 + oppo*20])
+                        state[34 + current_player*20] += real
+                        state[34 + oppo*20] -= real
+                if state[32 + current_player*20] == 1:
+                    choice,file_temp,file_per = action_player(state,player0,player1,player2,player3,file_temp,file_per)
+                    oppo = (current_player + 3 - choice)%4
+                    real = min(5,state[34 + oppo*20])
                     state[34 + current_player*20] += real
                     state[34 + oppo*20] -= real
-            if state[32 + current_player*20] == 1:
-                choice,file_temp,file_per = action_player(state,player0,player1,player2,player3,file_temp,file_per)
-                oppo = (current_player + 3 - choice)%4
-                real = min(5,state[34 + oppo*20])
-                state[34 + current_player*20] += real
-                state[34 + oppo*20] -= real
-            if state[33 + current_player*20] == 1:
-                state[95] = 4
-                choice,file_temp,file_per = action_player(state,player0,player1,player2,player3,file_temp,file_per)
-                choice -= 28
-                if choice > 0:
-                    target = choice//144 +1
-                    oppo = (current_player + target)%4
-                    con_lai = choice%144
-                    give = con_lai%12
-                    take = con_lai//12
-                    state[give + 19 + current_player*20] -= 1
-                    state[oppo * 20 + give + 19] += 1
-                    state[oppo * 20 + take + 19] -= 1
-                    state[take + 19 + current_player*20] += 1
-        if sum_dice == 7:
-            if state[25 + current_player*20] > 0:
-                state[34 + current_player*20] += state[25 + current_player*20] * state[20 + current_player*20]
-        if sum_dice == 8:
-            if state[26 + current_player*20] > 0:
-                state[34 + current_player*20] += state[26 + current_player*20] * 3 * (state[24 + current_player*20] + state[27 + current_player*20])
-        if sum_dice == 9:
-            for next in range(1,4):
-                oppo = (current_player - next)%4
-                if state[28 + oppo*20] > 0:
-                    cost = (2 + state[16 + oppo*20]) * state[28 + oppo*20]
-                    real = min(cost, state[34 + current_player*20])
-                    state[34 + current_player*20] -= real
-                    state[34 + oppo*20] += real
-            for nguoichoi in range(4):
-                if state[27 + nguoichoi*20] >0:
-                    state[34 + nguoichoi*20] += state[27 + nguoichoi*20] * 5
-        if sum_dice == 10:
-            for next in range(1,4):
-                oppo = (current_player - next)%4
-                if state[28 + oppo*20] > 0:
-                    cost = (2 + state[16 + oppo*20]) * state[28 + oppo*20]
-                    real = min(cost, state[34 + current_player*20])
-                    state[34 + current_player*20] -= real
-                    state[34 + oppo*20] += real
-            for nguoichoi in range(4):
-                if state[29 + nguoichoi*20] >0:
-                    state[34 + nguoichoi*20] += state[29 + nguoichoi*20] * 3
-        if sum_dice > 10:
-            if state[30 + current_player*20] > 0:
-                state[34 + current_player*20] += state[30 + current_player*20] * 3 * (state[19 + current_player*20] + state[29 + current_player*20])
+                if state[33 + current_player*20] == 1:
+                    state[95] = 4
+                    choice,file_temp,file_per = action_player(state,player0,player1,player2,player3,file_temp,file_per)
+                    choice -= 28
+                    if choice > 0:
+                        target = choice//144 +1
+                        oppo = (current_player + target)%4
+                        con_lai = choice%144
+                        give = con_lai%12
+                        take = con_lai//12
+                        state[give + 19 + current_player*20] -= 1
+                        state[oppo * 20 + give + 19] += 1
+                        state[oppo * 20 + take + 19] -= 1
+                        state[take + 19 + current_player*20] += 1
+            if sum_dice == 7:
+                if state[25 + current_player*20] > 0:
+                    state[34 + current_player*20] += state[25 + current_player*20] * state[20 + current_player*20]
+            if sum_dice == 8:
+                if state[26 + current_player*20] > 0:
+                    state[34 + current_player*20] += state[26 + current_player*20] * 3 * (state[24 + current_player*20] + state[27 + current_player*20])
+            if sum_dice == 9:
+                for next in range(1,4):
+                    oppo = (current_player - next)%4
+                    if state[28 + oppo*20] > 0:
+                        cost = (2 + state[16 + oppo*20]) * state[28 + oppo*20]
+                        real = min(cost, state[34 + current_player*20])
+                        state[34 + current_player*20] -= real
+                        state[34 + oppo*20] += real
+                for nguoichoi in range(4):
+                    if state[27 + nguoichoi*20] >0:
+                        state[34 + nguoichoi*20] += state[27 + nguoichoi*20] * 5
+            if sum_dice == 10:
+                for next in range(1,4):
+                    oppo = (current_player - next)%4
+                    if state[28 + oppo*20] > 0:
+                        cost = (2 + state[16 + oppo*20]) * state[28 + oppo*20]
+                        real = min(cost, state[34 + current_player*20])
+                        state[34 + current_player*20] -= real
+                        state[34 + oppo*20] += real
+                for nguoichoi in range(4):
+                    if state[29 + nguoichoi*20] >0:
+                        state[34 + nguoichoi*20] += state[29 + nguoichoi*20] * 3
+            if sum_dice > 10:
+                if state[30 + current_player*20] > 0:
+                    state[34 + current_player*20] += state[30 + current_player*20] * 3 * (state[19 + current_player*20] + state[29 + current_player*20])
         state[95] = 5
         # bắt đầu mua sắm thôi, mệt vl
         choice,file_temp,file_per = action_player(state,player0,player1,player2,player3,file_temp,file_per)
