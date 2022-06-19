@@ -54,7 +54,7 @@ def get_list_action(play_state):
                     list_return.append(card)
         # nếu có từ 4 xu trở lên
         if play_state[34] > 3:
-            if play_state[15] != -1:
+            if play_state[15] != 1:
                 list_return.append(7)
         # nếu có từ 5 xu trở lên
         if play_state[34] > 4:
