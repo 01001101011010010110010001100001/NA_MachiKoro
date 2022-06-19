@@ -504,14 +504,14 @@ def normal_environment(state,list_player,print_mode,file_temp,file_per):
 def normal_main(list_player,times,print_mode):
     count = [0,0,0,0]
     file_per = []
-    # list_randomed = [0,1,2,3]
+    list_randomed = [0,1,2,3]
     for van in range(times):
-        # rd.shuffle(list_randomed)
-        # shuffled_players = [list_player[list_randomed[0]],list_player[list_randomed[1]],list_player[list_randomed[2]],list_player[list_randomed[3]]]
+        rd.shuffle(list_randomed)
+        shuffled_players = [list_player[list_randomed[0]],list_player[list_randomed[1]],list_player[list_randomed[2]],list_player[list_randomed[3]]]
         state = reset()
         file_temp = [[],[],[],[]]
         win,file_temp,file_per = normal_environment(state,list_player,print_mode,file_temp,file_per)
-        # real_winner = list_randomed[win]
+        real_winner = list_randomed[win]
         count[win] += 1
     return count,file_per
 
