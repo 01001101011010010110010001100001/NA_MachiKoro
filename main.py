@@ -4,6 +4,8 @@ import random as rd
 def reset():
     return np.array([6,6,6,6,6,6,6,6,6,6,6,6,4,4,4,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1])
 
+reset()
+
 def get_list_action(play_state):
     if play_state[95] == 7:
         return np.array([0])
@@ -510,8 +512,8 @@ def normal_main(list_player,times,print_mode):
         shuffled_players = [list_player[list_randomed[0]],list_player[list_randomed[1]],list_player[list_randomed[2]],list_player[list_randomed[3]]]
         state = reset()
         file_temp = [[],[],[],[]]
-        win,file_temp,file_per = normal_environment(state,list_player,print_mode,file_temp,file_per)
+        win,file_temp,file_per = normal_environment(state,shuffled_players,print_mode,file_temp,file_per)
         real_winner = list_randomed[win]
-        count[win] += 1
+        count[real_winner] += 1
     return count,file_per
 
