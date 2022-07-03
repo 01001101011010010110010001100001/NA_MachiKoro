@@ -1,519 +1,391 @@
 import numpy as np
-import random as rd
+import numpy.random as rd
+import random
+from numba import vectorize, jit, cuda, float64
 
+# khởi tạo bàn chơi
+@jit(nopython=True)
 def reset():
-    return np.array([6,6,6,6,6,6,6,6,6,6,6,6,4,4,4,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1])
+    state = np.array([3, 0, 0, 0, 0,0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1,4, 0, 0, 0, 0,0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1,4, 0, 0, 0, 0,0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 3, 1, 0, 0, 0,0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 3, 1, 0, 0, 0,0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1,0,0,0,10,10,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    actions = np.array([a for a in range(1,44)])
+    points = np.array([a for a in range(36)])
+    rd.shuffle(actions)
+    rd.shuffle(points)
+    state = np.append(state,actions)
+    state = np.append(state,points)
+    return state
 
-reset()
+@jit(nopython=True)
+def dict_actions():
+    return np.array([[[0, 0, 0, 0],[2, 0, 0, 0]],[[0, 0, 0, 0],[3, 0, 0, 0]],[[0, 0, 0, 0],[4, 0, 0, 0]],[[0, 0, 0, 0],[1, 1, 0, 0]],[[0, 0, 0, 0],[0, 0, 1, 0]],[[0, 0, 0, 0],[2, 1, 0, 0]],[[0, 0, 0, 0],[0, 2, 0, 0]],[[0, 0, 0, 0],[1, 0, 1, 0]],[[0, 0, 0, 0],[0, 0, 0, 1]],[[2, 0, 0, 0],[0, 2, 0, 0]],[[2, 0, 0, 0],[0, 0, 1, 0]],[[3, 0, 0, 0],[0, 0, 0, 1]],[[3, 0, 0, 0],[0, 3, 0, 0]],[[3, 0, 0, 0],[0, 1, 1, 0]],[[4, 0, 0, 0],[0, 0, 2, 0]],[[4, 0, 0, 0],[0, 0, 1, 1]],[[5, 0, 0, 0],[0, 0, 0, 2]],[[5, 0, 0, 0],[0, 0, 3, 0]],[[0, 1, 0, 0],[3, 0, 0, 0]],[[0, 2, 0, 0],[0, 0, 2, 0]],[[0, 2, 0, 0],[3, 0, 1, 0]],[[0, 2, 0, 0],[2, 0, 0, 1]],[[0, 3, 0, 0],[0, 0, 3, 0]],[[0, 3, 0, 0],[0, 0, 0, 2]],[[0, 3, 0, 0],[1, 0, 1, 1]],[[0, 3, 0, 0],[2, 0, 2, 0]],[[0, 0, 1, 0],[4, 1, 0, 0]],[[0, 0, 1, 0],[1, 2, 0, 0]],[[0, 0, 1, 0],[0, 2, 0, 0]],[[0, 0, 2, 0],[2, 1, 0, 1]],[[0, 0, 2, 0],[0, 0, 0, 2]],[[0, 0, 2, 0],[2, 3, 0, 0]],[[0, 0, 2, 0],[0, 2, 0, 1]],[[0, 0, 3, 0],[0, 0, 0, 3]],[[0, 0, 0, 1],[0, 0, 2, 0]],[[0, 0, 0, 1],[3, 0, 1, 0]],[[0, 0, 0, 1],[0, 3, 0, 0]],[[0, 0, 0, 1],[2, 2, 0, 0]],[[0, 0, 0, 1],[1, 1, 1, 0]],[[0, 0, 0, 2],[1, 1, 3, 0]],[[0, 0, 0, 2],[0, 3, 2, 0]],[[1, 1, 0, 0],[0, 0, 0, 1]],[[2, 0, 1, 0],[0, 0, 0, 2]],[[0, 0, 0, 0],[0, 0, 0, 0]],[[0, 0, 0, 0],[0, 0, 0, 0]]])
 
-def get_list_action(play_state):
-    if play_state[95] == 7:
-        return np.array([0])
-    if play_state[95] == 1:
-        return np.array([1,2])
-    if play_state[95] == 2:
-        if play_state[15] == 1:
-            return np.array([1,2,3])
-        else:
-            return np.array([0,1])
-    if play_state[95] == 3:
-        return np.array([4,5,6])
-    if play_state[95] == 4:
-        list_return = [0]
-        for act in range(432):
-            target = act//144 +1
-            con_lai = act%144
-            give = con_lai%12
-            take = con_lai//12
-            if play_state[give + 19] == 0 or play_state[target * 20 + take + 19] == 0:
-                continue
+@jit(nopython=True)
+def dict_points():
+    return  np.array([[0, 0, 0, 5],[0,0,2,3],[0,0,3,2],[0,0,0,4],[0,2,0,3],[0,0,5,0],[0,0,2,2],[0,3,0,2],[2,0,0,3],[0,2,3,0],[0,0,4,0],[0,2,0,2],[0,3,2,0],[2,2,0,0],[3,2,0,0],[2,3,0,0],[2,0,2,0],[0,4,0,0],[3,0,2,0],[2,0,0,2],[0,5,0,0],[0,2,2,0],[2,0,3,0],[3,0,0,2],[1,1,1,3],[0,2,2,2],[1,1,3,1],[2,0,2,2],[1,3,1,1],[2,2,0,2],[3,1,1,1],[2,2,2,0],[0,2,1,1],[1,0,2,1],[1,1,1,1],[2,1,0,1]]),np.array([20,18,17,16,16,15,14,14,14,13,12,12,12,6,7,8,8,8,9,10,10,10,11,11,20,19,18,17,16,15,14,13,12,12,12,9])
+
+@jit(nopython=True)
+def env_to_player(env_state):
+    current_player = env_state[255]%5
+    viewpoint = env_state[51*current_player:51*(current_player+1)]
+    to_player = env_state[:51*current_player]
+    from_player = env_state[51*(current_player+1):255]
+    viewpoint = np.append(viewpoint,to_player)
+    viewpoint = np.append(viewpoint,from_player)
+    bonus = env_state[255:284]
+    viewpoint = np.append(viewpoint,bonus)
+    deck_a = [-1,-1,-1,-1,-1,-1]
+    for vitri in range(6):
+        for the in env_state[284:327]:
+            if the > -1 and the not in deck_a:
+                deck_a[vitri] = the
+                break
+    deck_p = [-1,-1,-1,-1,-1]
+    for vitri in range(5):
+        for the in env_state[327:]:
+            if the > -1 and the not in deck_p:
+                deck_p[vitri] = the
+                break
+    viewpoint = np.append(viewpoint,deck_a)
+    viewpoint = np.append(viewpoint,deck_p)
+    return viewpoint
+
+@jit(nopython=True)
+def get_list_action(state):
+    #phase = 10 là end game
+    if state[256] == 10:
+        return np.array([65])
+    #phase = 0 là trạng thái bình thường
+    if state[256] == 0:
+        # tạo action 64 mặc định là nghỉ
+        list_action = [64]
+        # check thẻ action còn dùng được
+        data = dict_actions()
+        for act in range(6,51):
+            if state[act] == -1:
+                # check xem chi phí thẻ
+                give = data[act-6][0]
+                if min(state[:4] - give) >=0:
+                    list_action.append(act)
+        # thêm thẻ action có thể mua được, action 0 là mua thẻ free, action 1 là mua thẻ mất 1, 5 là thẻ cuối cùng, trả 5 nl
+        for act in range(6):
+            if act <= np.sum(state[:4]):
+                list_action.append(act)
+        # thêm thẻ point có thể mua được, 51 là mua thẻ có vàng, 52 là mua thẻ bạc, 53,54,55 là mua thẻ còn lại
+        data = dict_points()
+        for idp in range(5):
+            point_index = state[290+idp]
+            cost = data[0][point_index]
+            if np.min(state[:4] - cost) >= 0:
+                list_action.append(51+idp)
+        return np.array(list_action)
+    # phase = 1 là trạng thái nâng cấp, 56 là không nâng, 57 nâng vàng, 58 nâng đỏ, 59 nâng xanh
+    if state[256] == 1:
+        list_action = [65]
+        for nl in range(3):
+            if state[nl] > 0:
+                list_action.append(57+nl)
+        return np.array(list_action)
+    # phase = 3 là trạng thái đang dùng thẻ, 65 là không dùng nữa
+    if state[256] == 3:
+        list_action = [65,state[257]]
+        return np.array(list_action)
+    # phase = 4 là trả nguyên liệu sau khi dùng thẻ, 60 là trả vàng, 63 là trả nâu
+    if state[256] > 3:
+        list_action = [60,61,62,63]
+        for nl in range(4):
+            if state[nl] == 0:
+                list_action.remove(60+nl)
+        return np.array(list_action)
+    # phase = 5 là trả nguyên liệu khi mua thẻ action (trả xong được thêm nl bonus trên bàn)
+
+@jit(nopython=True)
+def check_win(env_state):
+    win = 0
+    max = 0
+    end = -1
+    for nguoichoi in range(5):
+        if env_state[nguoichoi*51 + 4] == 5:
+            end = 1
+        if env_state[nguoichoi*51 +5] > max:
+            max = env_state[nguoichoi*51 +5]
+            win = nguoichoi
+    if end > 0:
+        return win
+    else:
+        return -1
+
+@jit(nopython=True)
+def environment(env_state,choice):
+    # tìm kiếm người chơi hiện tại
+    current_player = env_state[255]%5
+    # nếu người chơi nghỉ
+    if choice == 64:
+        for idc in range(6,51):
+            if env_state[current_player*51 + idc] == 1:
+                env_state[current_player*51 + idc] = -1
+        # print(current_player,"nghỉ")
+        env_state[255] += 1
+        
+        return env_state
+    # nếu người chơi chọn mua thẻ action
+    if choice in range(6):
+        # thêm thẻ vào tay người chơi
+        for ida in range(284,327):
+            if env_state[ida] > -1:
+                card_id = env_state[ida]
+                env_state[current_player*51 + card_id + 6] = -1
+                # xóa thẻ trên bàn
+                env_state[ida] = -1
+                #thôi không tìm nữa
+                break
+        # nếu lấy thẻ free
+        if choice == 0:
+            env_state[current_player*51:current_player*51+4] += env_state[260:264]
+            # nếu lất xong dư nguyên liệu
+            if np.sum(env_state[current_player*51:current_player*51+4]) > 10:
+                env_state[256] = 4
+                env_state[257] = np.sum(env_state[current_player*51:current_player*51+4]) - 10
+                # print(current_player,"lấy thẻ và dư nguyên liệu")
+                return env_state
             else:
-                list_return.append(act + 28)
-        return np.array(list_return)
-    if play_state[95] == 5:
-        list_return = [0]
-        # có từ 1 xu trở lên
-        if play_state[34] > 0:
-            # thẻ 1,2,2_3
-            for card in [11,12,13]:
-                if play_state[card-11] > 0 and play_state[card + 89] > 0:
-                    list_return.append(card)
-        # nếu có từ 2 xu trờ lên
-        if play_state[34] > 1:
-            for card in [14,15,22]:
-                # thẻ 3,4,11_12
-                if play_state[card-11] > 0 and play_state[card+89] > 0:
-                    list_return.append(card)
-        # nếu có từ 3 xu trở lên
-        if play_state[34] > 2:
-            # thẻ 5, 8, 9_10, 10
-            for card in [16,18,20,21]:
-                if play_state[card-11] > 0 and play_state[card+89] > 0:
-                    list_return.append(card)
-        # nếu có từ 4 xu trở lên
-        if play_state[34] > 3:
-            if play_state[15] != 1:
-                list_return.append(7)
-        # nếu có từ 5 xu trở lên
-        if play_state[34] > 4:
-            for card in [17]:
-                if play_state[card-11] > 0 and play_state[card+89] > 0:
-                    list_return.append(card)
-        # nếu có từ 6 xu trở lên
-        if play_state[34] > 5:
-            for card in [19]:
-                if play_state[card-11] > 0 and play_state[card+89] > 0:
-                    list_return.append(card)
-            if play_state[31] == 0:
-                list_return.append(23)
-        # nếu có từ 7 xu trở lên
-        if play_state[34] > 6:
-            if play_state[32] == 0:
-                list_return.append(24)
-        # nếu có từ 8 xu trở lên
-        if play_state[34] > 7:
-            if play_state[33] == 0:
-                list_return.append(25)
-        # nếu có từ 10 xu trở lên
-        if play_state[34] > 9:
-            if play_state[16] == 0:
-                list_return.append(8)
-        # nếu có từ 16 xu trở lên
-        if play_state[34] > 15:
-            if play_state[17] == 0:
-                list_return.append(9)
-        # nếu có từ 22 xu trở lên
-        if play_state[34] > 21:
-            if play_state[18] == 0:
-                list_return.append(10)
-        return np.array(list_return)
-            
-def state_to_player(state):
-    turn = state[99]%4
-    player_state = [state[0]]
-    for phantu in state[1:15]:
-        player_state.append(phantu)
-    self_state = state[15 + 20 * turn: 35 + 20 * turn]
-    next_state1 = state[15 + 20 * ((turn+1) % 4): 35 + 20 * ((turn+1) % 4)]
-    next_state2 = state[15 + 20 * ((turn+2) % 4): 35 + 20 * ((turn+2) % 4)]
-    next_state3 = state[15 + 20 * ((turn+3) % 4): 35 + 20 * ((turn+3) % 4)]
-    con_lai = state[95:]
-    for phantu in self_state:
-        player_state.append(phantu)
-    for phantu in next_state1:
-        player_state.append(phantu)
-    for phantu in next_state2:
-        player_state.append(phantu)
-    for phantu in next_state3:
-        player_state.append(phantu)
-    for phantu in con_lai:
-        player_state.append(phantu)
-    # print(player_state)
-    return player_state
+                #nếu không dư nguyên liệu
+                # print(current_player,"lấy thẻ nhưng không thừa nl")
+                env_state[255] += 1
+                
+                return env_state
+        # nếu lấy thẻ không free
+        else:
+            #chuyển phase thành 5
+            env_state[256] = 5
+            # cho số nl cần bỏ vào solving
+            env_state[257] = choice
+            # xử lý dữ liệu bonus
+            # cắt riêng ra
+            from_choice = env_state[260+4*choice:260+4*(choice+1)]
+            data_bonus = env_state[260+4*(choice+1):284]
+            new_data = np.append(data_bonus,from_choice)
+            env_state[260+4*choice:284] = new_data
+            # print(current_player,"lấy thẻ, đang trả nl")
+            return env_state
 
-def random_player0(play_state,file_temp,file_per):
-    a = get_list_action(play_state)
-    b = rd.randrange(len(a))
-    return a[b],file_temp,file_per
+    # nếu người chơi đánh thẻ action
+    if choice in range(6,51):
+        # cho thẻ về trạng thái đã dùng(1)
+        env_state[choice] = 1
+        data = dict_actions()[choice-6]
+        give = data[0]
+        take = data[1]
+        # nếu là thẻ nâng cấp
+        if np.sum(take) == 0:
+            env_state[256] = 1
+            env_state[257] = 52-choice
+            # print(current_player,"nâng cấp",52-choice,"lần")
+            return env_state
+        # nếu là thẻ dùng 1 lần
+        if np.sum(give) == 0:
+            env_state[current_player*51:current_player*51+4] += take
+            # check xem có dư nguyên liệu không
+            if np.sum(env_state[current_player*51:current_player*51+4]) > 10:
+                # chuyển phase thành 4
+                env_state[256] = 4
+                env_state[257] = np.sum(env_state[current_player*51:current_player*51+4]) - 10
+                # print(current_player,"dùng thẻ nl free, đang thừa nl")
+                return env_state
+            else:
+                # print(current_player,"dùng thẻ free, không thừa nl")
+                env_state[255] += 1
+                
+                return env_state
+        # nếu là thẻ dùng nhiều lần
+        else:
+            env_state[current_player*51:current_player*51+4] += take
+            env_state[current_player*51:current_player*51+4] -= give
+            # nếu vẫn còn dùng được thì hỏi xem có dùng tiếp không
+            if np.min(env_state[current_player*51:current_player*51+4] - give) >= 0:
+                env_state[256] = 3
+                env_state[257] = choice
+                # print(current_player,"dùng thẻ",choice,"vẫn có thể đổi tiếp")
+                return env_state
+            # nếu đã dùng hết
+            else:
+                # và thừa 1 đống nguyên liệu
+                if np.sum(env_state[current_player*51:current_player*51+4]) > 10:
+                    env_state[256] = 4
+                    env_state[257] = np.sum(env_state[current_player*51:current_player*51+4]) -10
+                    # print(current_player,"sau khi đổi nl còn thừa 1 đống nl")
+                    return env_state
+                # nếu không thừa nguyên liệu
+                else:
+                    env_state[256] = 0
+                    # print(current_player,"đổi nl xong, hết lượt")
+                    env_state[255] += 1
+                    return env_state
+    # nếu người chơi chọn không dùng thẻ nữa/không nâng cấp nữa
+    if choice == 65 or choice == 56:
+        # nếu còn thừa nguyên liệu
+        if np.sum(env_state[current_player*51:current_player*51+4]) > 10:
+            env_state[256] = 4
+            env_state[257] = np.sum(env_state[current_player*51:current_player*51+4]) -10
+            # print(current_player,"dùng thẻ xong và còn thừa nl")
+            return env_state
+        # nếu không còn thừa nl 
+        else:
+            env_state[256] = 0
+            env_state[255] += 1
+            # print(current_player,"dùng thẻ xong, hết lượt")
+            return env_state
+    if choice in range(57,60):
+        nl_remove = choice - 57
+        # nâng cấp nguyên liệu
+        env_state[current_player*51 + nl_remove] -= 1
+        env_state[current_player*51 + nl_remove + 1] += 1
+        # giảm counter
+        env_state[257] -= 1
+        # nếu đã hết
+        if env_state[257] == 0:
+            env_state[256] = 0
+            env_state[255] += 1
+            # print(current_player,"nâng cấp lần cuối, hết lượt")
+            return env_state
+        else:
+            # print(current_player,"nâng cấp",choice -57)
+            return env_state
+    # nếu nười chơi mua thẻ điểm
+    if choice in range(51,56):
+        data = dict_points()
+        bonus = 0
+        if choice == 51:
+            if env_state[258] > 0:
+                bonus = 3
+                env_state[258] -= 1
+            else:
+                if env_state[259] > 0:
+                    bonus = 1
+                    env_state[259] -= 1
+        if choice == 52:
+            if env_state[259] > 0:
+                bonus = 1
+                env_state[259] -= 1
+        # tìm thẻ được mua
+        id_tren_ban = choice - 51
+        for iddeck in range(36):
+            if env_state[327+iddeck] > -1:
+                if id_tren_ban == 0:
+                    break
+                id_tren_ban -= 1
+        # vị trí của thẻ trong danh sách
+        point_card = env_state[327+iddeck]
+        # xóa thẻ khỏi bàn chơi
+        env_state[327+iddeck] = -1
+        cost = data[0][point_card]
+        score = data[1][point_card]
+        # print(current_player,"có",env_state[current_player*51:current_player*51+4],"mua thẻ điểm tốn",cost)
+        env_state[current_player*51:current_player*51+4] -= cost
+        env_state[current_player*51 + 4] += 1
+        env_state[current_player*51 + 5] += score + bonus
+        env_state[255] += 1
+        # print(current_player,"mua điểm, nhận được",score+bonus,"điểm")
+        return env_state
+    # nếu người chơi trả nguyên liệu
+    if choice in range(60,64):
+        # trừ nguyên liệu của người chơi
+        env_state[current_player*51 + choice-60] -= 1
+        env_state[257] -= 1
+        # chưa trả hết thì trả tiếp nhé
+        if env_state[257] > 0:
+            # print(current_player,"trả nguyên liệu",choice-60,"còn",env_state[257],"nữa")
+            return env_state
+        # nếu trả hết thì check xem đang trả cho cái gì
+        else:
+            # nếu trả cho việc dùng thẻ
+            if env_state[256] == 4:
+                env_state[256] = 0
+                env_state[255] += 1
+                # print(current_player,"trả xong, hết lượt")
+                return env_state
+            # nếu trả cho việc mua thẻ
+            else:
+                # cộng nguyên liệu bonus
+                env_state[current_player*51:current_player*51+4] += env_state[280:284]
+                # reset nguyên liệu bonus
+                env_state[280:284] = 0
+                # nếu còn thừa nguyên liệu
+                if np.sum(env_state[current_player*51:current_player*51+4]) > 10:
+                    env_state[256] = 4
+                    env_state[257] = np.sum(env_state[current_player*51:current_player*51+4]) -10
+                    # print(current_player,"nhận được nl bonus, vượt 10 nl")
+                    return env_state
+                # nếu không còn thừa nl 
+                else:
+                    env_state[256] = 0
+                    env_state[255] += 1
+                    # print(current_player,"trả xong chi phí mua thẻ action")
+                    return env_state
 
-def random_player1(play_state,file_temp,file_per):
-    a = get_list_action(play_state)
-    b = rd.randrange(len(a))
-    return a[b],file_temp,file_per
+@jit(nopython=True)
+def amount_action_space():
+    return 66
 
-def random_player2(play_state,file_temp,file_per):
-    a = get_list_action(play_state)
-    b = rd.randrange(len(a))
-    return a[b],file_temp,file_per
 
-def random_player3(play_state,file_temp,file_per):
-    a = get_list_action(play_state)
-    b = rd.randrange(len(a))
-    return a[b],file_temp,file_per
-
-def action_player(state,list_player,file_temp,file_per):
-    current_player = state[99]%4
-    play_state = state_to_player(state)
-    played_move,file_temp[current_player],file_per = list_player[current_player](play_state,file_temp[current_player],file_per)
-    return played_move,file_temp,file_per
-
-def system_check_end(state):
-    for nguoichoi in range(4):
-        if state[15 + nguoichoi*20] * state[16 + nguoichoi*20] * state[17 + nguoichoi*20] * state[18 + nguoichoi*20] == 1:
-            return nguoichoi
-    return - 1
+# @jit(nopython=True)
+def one_game(list_player,file_per):
+    env_state = reset()
+    file_temp = [[],[],[],[],[]]
+    turn = 0
+    while check_win(env_state) == -1:
+        current_player = env_state[255]%5
+        state = env_to_player(env_state)
+        # print(file_temp,current_player)
+        action,file_temp[current_player],file_per = list_player[current_player](state,file_temp[current_player],file_per)
+        env_state = environment(env_state,action)
+        turn += 1
+    for turn_bonus in range(5):
+        env_state[255] += 1
+        current_player = env_state[255]%5
+        state = env_to_player(env_state)
+        # print("người chơi",current_player,"check victory",check_victory(state))
+        # print("hệ thống check win",check_win(env_state))
+        action,file_temp[current_player],file_per = list_player[current_player](state,file_temp[current_player],file_per)
+    # print("hết ván")
+    return check_win(env_state),file_per
 
 def check_victory(state):
-    for nguoichoi in range(4):
-        if state[15 + nguoichoi*20] * state[16 + nguoichoi*20] * state[17 + nguoichoi*20] * state[18 + nguoichoi*20] == 1:
-            if nguoichoi != 0:
-                return 0
-            else: 
-                return 1
-    return -1 
+    win = -1
+    max = 0
+    end = -1
+    for nguoichoi in range(5):
+        if state[nguoichoi*51 + 4] == 5:
+            end = 1
+        if state[nguoichoi*51 +5] > max:
+            max = state[nguoichoi*51 +5]
+            win = nguoichoi
+    if end > 0:
+        if win == 0:
+            return 1
+        else:
+            return 0
+    else:
+        return -1
 
-def normal_environment(state,list_player,print_mode,file_temp,file_per):
-    while system_check_end(state) == -1:
-        current_player = state[99]%4
-        if state[95] == 0:
-            state[95] = 1
-            # check xem chọn 1 hay 2 dice
-            if state[15 + current_player*20] == 1:
-                choice,file_temp,file_per = action_player(state,list_player,file_temp,file_per)
-                if choice == 1:
-                    state[96] = rd.randrange(1,7)
-                    state[97] = 0
-                if choice == 2:
-                    state[96] = rd.randrange(1,7)
-                    state[97] = rd.randrange(1,7)
-            else:
-                state[96] = rd.randrange(1,7)
-                state[97] = 0
-            if print_mode == 1:
-                print("kết quả xúc sắc là",state[96],state[97])
-            state[95] = 2
-            # check xem có reroll không
-            if state[18 + current_player*20] == 1:
-                choice,file_temp,file_per = action_player(state,list_player,file_temp,file_per)
-                if choice == 1:
-                    state[96] = rd.randrange(1,7)
-                    state[97] = 0
-                    if print_mode == 1:
-                        print("kết quả đổ lại xúc sắc là",state[96],state[97])
-                if choice == 2:
-                    state[96] = rd.randrange(1,7)
-                    state[97] = rd.randrange(1,7)
-                    if print_mode == 1:
-                        print("kết quả đổ lại xúc sắc là",state[96],state[97])
-            state[95] = 3
-            # giải quyết kết quả xúc xắc
-            sum_dice = state[96] + state[97]
-            if print_mode == 1:
-                print("đổ ra",sum_dice)
-            if sum_dice == 1:
-                for nguoichoi in range(4):
-                    if state[19 + nguoichoi*20] >0:
-                        state[34 + nguoichoi*20] += state[19 + nguoichoi*20]
-                        if print_mode == 1:
-                            print(nguoichoi,"có thêm",state[19 + nguoichoi*20],"xu, tổng là", state[34 + nguoichoi*20])
-            if sum_dice == 2:
-                for nguoichoi in range(4):
-                    if state[20 + nguoichoi*20] >0:
-                        state[34 + nguoichoi*20] += state[20 + nguoichoi*20]
-                        if print_mode == 1:
-                            print(nguoichoi,"có thêm",state[20 + nguoichoi*20],"xu, tổng là", state[34 + nguoichoi*20])
-                if state[21 + current_player*20] > 0:
-                    state[34 + current_player*20] += state[21 + current_player*20] * (1 + state[16 + current_player*20])
-                    if print_mode == 1:
-                        print(current_player,"có thêm",state[21 + current_player*20] * (1 + state[16 + current_player*20]),"xu, tổng là", state[34 + current_player*20])
-            if sum_dice == 3:
-                for next in range(1,4):
-                    oppo = (current_player - next)%4
-                    if print_mode == 1:
-                        print(state[22 + oppo*20])
-                    if state[22 + oppo*20] > 0:
-                        cost = (1 + state[36 + oppo*20]) * state[22 + oppo*20]
-                        real = min(cost, state[34 + current_player*20])
-                        state[34 + current_player*20] -= real
-                        state[34 + oppo*20] += real
-                        if print_mode == 1:
-                            print(oppo,"cướp của",current_player,real,"xu")
-                if state[21 + current_player*20] > 0:
-                    state[34 + current_player*20] += state[21 + current_player*20] * (1 + state[16 + current_player*20])
-                    if print_mode == 1:
-                        print(current_player,"có thêm",state[21 + current_player*20] * (1 + state[16 + current_player*20]),"xu, tổng là", state[34 + current_player*20])
-            if sum_dice == 4:
-                if state[23 + current_player*20] > 0:
-                    state[34 + current_player*20] += state[23 + current_player*20] * (3 + state[16 + current_player*20])
-                    if print_mode == 1:
-                        print(current_player,"có thêm",state[23 + current_player*20] * (3 + state[16 + current_player*20]),"xu, tổng là", state[34 + current_player*20])
-            if sum_dice == 5:
-                for nguoichoi in range(4):
-                    if state[24 + nguoichoi*20] >0:
-                        state[34 + nguoichoi*20] += state[24 + nguoichoi*20]
-                        if print_mode == 1:
-                            print(nguoichoi,"có thêm",state[24 + nguoichoi*20],"xu, tổng là", state[34 + nguoichoi*20])
-            if sum_dice == 6:
-                if state[31 + current_player*20] == 1:
-                    for next in range(1,4):
-                        oppo = (current_player-next)%4
-                        real = min(2,state[34 + oppo*20])
-                        state[34 + current_player*20] += real
-                        state[34 + oppo*20] -= real
-                        if print_mode == 1:
-                            print(current_player,"cướp",real,"từ người chơi",oppo)
-                if state[32 + current_player*20] == 1:
-                    choice,file_temp,file_per = action_player(state,list_player,file_temp,file_per)
-                    oppo = (current_player + 3 - choice)%4
-                    real = min(5,state[34 + oppo*20])
-                    state[34 + current_player*20] += real
-                    state[34 + oppo*20] -= real
-                    if print_mode == 1:
-                        print(current_player,"cướp",real,"xu từ người chơi",oppo)
-                if state[33 + current_player*20] == 1:
-                    state[95] = 4
-                    choice,file_temp,file_per = action_player(state,list_player,file_temp,file_per)
-                    choice -= 28
-                    if choice > 0:
-                        target = choice//144 +1
-                        oppo = (current_player + target)%4
-                        con_lai = choice%144
-                        give = con_lai%12
-                        take = con_lai//12
-                        if print_mode == 1:
-                            print(state[give + 19 + current_player*20],state[oppo * 20 + give + 19])
-                        state[give + 19 + current_player*20] -= 1
-                        state[oppo * 20 + give + 19] += 1
-                        state[oppo * 20 + take + 19] -= 1
-                        state[take + 19 + current_player*20] += 1
-                        if print_mode == 1:
-                            print(current_player,"đổi thẻ",give,"lấy thẻ",take,"từ người chơi",oppo)
-                            print(state[give + 19 + current_player*20],state[oppo * 20 + give + 19])
-            if sum_dice == 7:
-                if state[25 + current_player*20] > 0:
-                    state[34 + current_player*20] += state[25 + current_player*20] * state[20 + current_player*20]
-                    if print_mode == 1:
-                        print(current_player,"có thêm",state[25 + current_player*20] * state[20 + current_player*20],"xu, tổng là", state[34 + current_player*20])
-            if sum_dice == 8:
-                if state[26 + current_player*20] > 0:
-                    state[34 + current_player*20] += state[26 + current_player*20] * 3 * (state[24 + current_player*20] + state[27 + current_player*20])
-                    if print_mode == 1:
-                        print(current_player,"có thêm",state[26 + current_player*20] * 3 * (state[24 + current_player*20] + state[27 + current_player*20]),"xu, tổng là", state[34 + current_player*20])
-            if sum_dice == 9:
-                for next in range(1,4):
-                    oppo = (current_player - next)%4
-                    if print_mode == 1:
-                        print(state[28 + oppo*20])
-                    if state[28 + oppo*20] > 0:
-                        cost = (2 + state[16 + oppo*20]) * state[28 + oppo*20]
-                        real = min(cost, state[34 + current_player*20])
-                        state[34 + current_player*20] -= real
-                        state[34 + oppo*20] += real
-                        if print_mode == 1:
-                            print(oppo,"cướp của",current_player,real,"xu")
-                for nguoichoi in range(4):
-                    if state[27 + nguoichoi*20] >0:
-                        state[34 + nguoichoi*20] += state[27 + nguoichoi*20] * 5
-                        if print_mode == 1:
-                            print(nguoichoi,"có thêm",state[27 + nguoichoi*20] * 5,"xu, tổng là", state[34 + nguoichoi*20])
-            if sum_dice == 10:
-                for next in range(1,4):
-                    oppo = (current_player - next)%4
-                    if print_mode == 1:
-                        print(state[28 + oppo*20])
-                    if state[28 + oppo*20] > 0:
-                        cost = (2 + state[16 + oppo*20]) * state[28 + oppo*20]
-                        real = min(cost, state[34 + current_player*20])
-                        state[34 + current_player*20] -= real
-                        state[34 + oppo*20] += real
-                        if print_mode == 1:
-                            print(oppo,"cướp của",current_player,real,"xu")
-                for nguoichoi in range(4):
-                    if state[29 + nguoichoi*20] >0:
-                        state[34 + nguoichoi*20] += state[29 + nguoichoi*20] * 3
-                        if print_mode == 1:
-                            print(nguoichoi,"có thêm",state[29 + nguoichoi*20] * 3,"xu, tổng là", state[34 + nguoichoi*20])
-            if sum_dice > 10:
-                if state[30 + current_player*20] > 0:
-                    state[34 + current_player*20] += state[30 + current_player*20] * 3 * (state[19 + current_player*20] + state[29 + current_player*20])
-                    if print_mode == 1:
-                        print(current_player,"có thêm",state[30 + current_player*20] * 3 * (state[19 + current_player*20] + state[29 + current_player*20]),"xu, tổng là", state[34 + current_player*20])
-            state[95] = 5
-        # bắt đầu mua sắm thôi, mệt vl
-        if print_mode == 1:
-            print(current_player,"thực có",state[34 + current_player*20],"xu")
-        new_xu = state_to_player(state)[34]
-        if print_mode == 1:
-            print(current_player,"nghĩ là có",new_xu,"xu")
-        choice,file_temp,file_per = action_player(state,list_player,file_temp,file_per)
-        # mua thẻ 1
-        if choice == 11:
-            state[choice + 8 + current_player*20] += 1
-            state[choice - 11] -= 1
-            state[choice + 89] = 0
-            state[34 + current_player*20] -=1
-            if print_mode == 1:
-                print(current_player,"bỏ 1 xu mua thẻ 1")
-                print("số thẻ 1 còn lại là",state[choice - 11])
-        # mua thẻ 2
-        if choice == 12:
-            state[choice + 8 + current_player*20] += 1
-            state[choice - 11] -= 1
-            state[choice + 89] = 0
-            state[34 + current_player*20] -=1
-            if print_mode == 1:
-                print(current_player,"bỏ 1 xu mua thẻ 2")
-                print("số thẻ 2 còn lại là",state[choice - 11])
-        # mua thẻ 2_3
-        if choice == 13:
-            state[choice + 8 + current_player*20] += 1
-            state[choice - 11] -= 1
-            state[choice + 89] = 0
-            state[34 + current_player*20] -=1
-            if print_mode == 1:
-                print(current_player,"bỏ 1 xu mua thẻ _2_3")
-                print("số thẻ _2_3 còn lại là",state[choice-11])
-        # mua thẻ 3
-        if choice == 14:
-            state[choice + 8 + current_player*20] += 1
-            state[choice - 11] -= 1
-            state[choice + 89] = 0
-            state[34 + current_player*20] -= 2
-            if print_mode == 1:
-                print(current_player,"bỏ 2 xu mua thẻ _3")
-                print("số thẻ _3 còn lại là",state[choice-11])
-        # mua thẻ 4
-        if choice == 15:
-            state[choice + 8 + current_player*20] += 1
-            state[choice - 11] -= 1
-            state[choice + 89] = 0
-            state[34 + current_player*20] -= 2
-            if print_mode == 1:
-                print(current_player,"bỏ 2 xu mua thẻ _4")
-                print("số thẻ _4 còn lại là",state[choice-11])
-        if choice == 22:
-            state[choice + 8 + current_player*20] += 1
-            state[choice - 11] -= 1
-            state[choice + 89] = 0
-            state[34 + current_player*20] -= 2
-            if print == 1:
-                print(current_player,"bỏ 2 xu mua thẻ _11_12")
-                print("số thẻ _11_12 còn lại là",state[choice-11])
-        # mua thẻ 5
-        if choice == 16:
-            state[choice + 8 + current_player*20] += 1
-            state[choice - 11] -= 1
-            state[choice + 89] = 0
-            state[34 + current_player*20] -= 3
-            if print_mode == 1:
-                print(current_player,"bỏ 3 xu mua thẻ _5")
-                print("số thẻ _5 còn lại là",state[choice-11])
-        # mua thẻ 8
-        if choice == 18:
-            state[choice + 8 + current_player*20] += 1
-            state[choice - 11] -= 1
-            state[choice + 89] = 0
-            state[34 + current_player*20] -= 3
-            if print_mode == 1:
-                print(current_player,"bỏ 3 xu mua thẻ _8")
-                print("số thẻ _8 còn lại là",state[choice-11])
-        # mua thẻ 9_10
-        if choice == 20:
-            state[choice + 8 + current_player*20] += 1
-            state[choice - 11] -= 1
-            state[choice + 89] = 0
-            state[34 + current_player*20] -= 3
-            if print_mode == 1:
-                print(current_player,"bỏ 3 xu mua thẻ _9_10")
-                print("số thẻ _9_10 còn lại là",state[choice - 11])
-        # mua thẻ 10
-        if choice == 21:
-            state[choice + 8 + current_player*20] += 1
-            state[choice - 11] -= 1
-            state[choice + 89] = 0
-            state[34 + current_player*20] -= 3
-            if print_mode == 1:
-                print(current_player,"bỏ 3 xu mua thẻ _10")
-                print("số thẻ _10 còn lại là",state[choice - 11])
-        # mua thẻ w1
-        if choice == 7:
-            state[15 + current_player*20] = 1
-            state[34 + current_player*20] -= 4
-            if print_mode == 1:
-                print(current_player,"bỏ 4 xu lật thẻ w1")
-        # mua thẻ 7
-        if choice == 17:
-            state[choice + 8 + current_player*20] += 1
-            state[choice - 11] -= 1
-            state[choice + 89] = 0
-            state[34 + current_player*20] -= 5
-            if print_mode == 1:
-                print(current_player,"bỏ 5 xu mua thẻ _7")
-                print("số thẻ _7 còn lại là",state[choice -11])
-        # mua thẻ 9
-        if choice == 19:
-            state[choice + 8 + current_player*20] += 1
-            state[choice - 11] -= 1
-            state[choice + 89] = 0
-            state[34 + current_player*20] -= 6
-            if print_mode == 1:
-                print(current_player,"bỏ 6 xu mua thẻ _9")
-                print("số thẻ _9 còn lại là",state[choice - 11])    
-        # mua thẻ 6_1
-        if choice == 23:
-            state[31 + current_player*20] = 1
-            state[12] -= 1
-            state[34 + current_player*20] -= 6
-            if print_mode == 1:
-                print(current_player,"bỏ 6 xu mua thẻ _6_1")
-                print("số thẻ _6_1 còn lại là",state[12])    
-        # mua thẻ 6_2
-        if choice == 24:
-            state[32 + current_player*20] = 1
-            state[13] -= 1
-            state[34 + current_player*20] -= 7
-            if print_mode == 1:
-                print(current_player,"bỏ 7 xu mua thẻ _6_2")
-                print("số thẻ _6_2 còn lại là",state[13]) 
-        # mua thẻ 6_3
-        if choice == 25:
-            state[33 + current_player*20] = 1
-            state[14] -= 1
-            state[34 + current_player*20] -= 8
-            if print_mode == 1:
-                print(current_player,"bỏ 8 xu mua thẻ _6_3")
-                print("số thẻ _6_3 còn lại là",state[14])    
-        # mua thẻ w2
-        if choice == 8:
-            state[16 + current_player*20] = 1
-            state[34 + current_player*20] -= 10
-            if print_mode == 1:
-                print(current_player,"bỏ 10 xu lật thẻ w2")
-        # mua thẻ w3
-        if choice == 9:
-            state[17 + current_player*20] = 1
-            state[34 + current_player*20] -= 16
-            if print_mode == 1:
-                print(current_player,"bỏ 16 xu lật thẻ w3")
-        # mua thẻ w4
-        if choice == 10:
-            state[18 + current_player*20] = 1
-            state[34 + current_player*20] -= 22
-            if print_mode == 1:
-                print(current_player,"bỏ 22 xu lật thẻ w4")
-        # nếu skip
-        if choice == 0:
-            state[95] = 0
-            if state[17 + current_player*20] == 1 and state[96] == state[97]:
-                if print_mode == 1:
-                    print(current_player,"được thêm 1 lượt nữa")
-                # return state
-            else:
-                if print_mode == 1:
-                    print("hết lượt của",current_player)
-                state[99] += 1
-                for bought in range(100,112):
-                    state[bought] = 1
-                # return state
-    # end game, cho mỗi người 1 turn dummy nữa
-    state[95] = 7
-    for nguoichoi in range(4):
-        state[99] += 1
-        choice,file_temp,file_per = action_player(state,list_player,file_temp,file_per)
-    win = system_check_end(state)
-    return win,file_temp,file_per
+# @jit(nopython=True)
+def player_random0(state,file_temp,file_per):
+    a = get_list_action(state)
+    b = random.randrange(len(a))
+    return a[b],file_temp,file_per
 
 def normal_main(list_player,times,print_mode):
-    count = [0,0,0,0]
+    count = [0,0,0,0,0]
     file_per = []
-    list_randomed = [0,1,2,3]
+    list_randomed = [0,1,2,3,4]
     for van in range(times):
         rd.shuffle(list_randomed)
-        shuffled_players = [list_player[list_randomed[0]],list_player[list_randomed[1]],list_player[list_randomed[2]],list_player[list_randomed[3]]]
+        shuffled_players = [list_player[list_randomed[0]],list_player[list_randomed[1]],list_player[list_randomed[2]],list_player[list_randomed[3]],list_player[list_randomed[4]]]
         state = reset()
-        file_temp = [[],[],[],[]]
-        win,file_temp,file_per = normal_environment(state,shuffled_players,print_mode,file_temp,file_per)
+        win,file_per = one_game(shuffled_players,file_per)
+        # print(turn)
         real_winner = list_randomed[win]
         count[real_winner] += 1
     return count,file_per
 
+# %timeit one_game
+one_game([player_random0,player_random0,player_random0,player_random0,player_random0],[])
